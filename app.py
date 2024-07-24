@@ -4,12 +4,13 @@ from robin_stocks.robinhood.helper import *
 from robin_stocks.robinhood.urls import *
 import plotly.graph_objects as go
 import plotly.express as px
+import numpy as np
 from dotenv import load_dotenv
 import os
 load_dotenv()
 
-u = "imtoolazytosetupagitignoreandenvironmentvariablesrightnow@gmail.com"
-p = "0.1xengineeryesIamhehe"
+u = os.environ.get('rh_username')
+p = os.environ.get('rh_password')
 
 def start(email, pw):
     try:
@@ -17,8 +18,6 @@ def start(email, pw):
         print("Logged in!")
     except:
         print("Error while trying to login.")
-
-start(u, p)
 
 
 
@@ -53,6 +52,7 @@ def get_watchlist_by_id(url_suffix = "e8ef4c1f-244f-4db5-a582-c4c37f3c8e8e", inf
 
 def get_general_category(industry):
     #print(set(df["industry"]))
+    #print(df[df['symbol'] == 'PYPL']) <-- print all rows where symbol is PYPL
 
     ## TODO If needed, use the below commented code later to add more to the classification_map
     # Check if the 'Category' column matches 'Unknown'
@@ -112,9 +112,9 @@ def get_general_category(industry):
 def create_watchlist_df(url_suffix = "e8ef4c1f-244f-4db5-a582-c4c37f3c8e8e", info="results"): # Default is 100 most popular: https://robinhood.com/lists/robinhood/e8ef4c1f-244f-4db5-a582-c4c37f3c8e8e
     #TODO this is most likely terrible performance wise; hopefully optimize it at some point
     
-    raw_list = get_watchlist_by_id()
+    raw_list = get_watchlist_by_id() #TODO FIX THIS!!!! <---------------------------------------- ! ! ! !  get_watchlist_by_id(url_suffix)
     
-    data = {
+    data = { #TODO fix this bc api calls are fked
         "market_cap": [r["market_cap"] for r in raw_list],
         "name": [r["name"] for r in raw_list],
         "symbol": [r["symbol"] for r in raw_list],
@@ -139,7 +139,7 @@ def create_watchlist_df(url_suffix = "e8ef4c1f-244f-4db5-a582-c4c37f3c8e8e", inf
 
 
 ##### Simple prototype that works fine for basic functionality; TODO iterate on it in terms of UI/UX mainly and use it as a base/reference
-# '''
+'''
 def create_heat_map(dataframe):
     header = "Overnight Trading Stock Market Heat Map"
     
@@ -163,13 +163,85 @@ def create_heat_map(dataframe):
     )
 
     return fig
-# '''
+'''
+
+
+
+def create_heat_map(dataframe):    
+    palette = {
+        -3: "#e74b3e", -2: "#b44b48", -1: "#84494e",
+        0: "#414553", 1: "#457351", 2: "#509957", 3: "#63c667"
+    }
+    black = "#262930"
+    
+    # Define a custom diverging color scale with more granularity around ±1%
+    color_scale = [
+        [0.0, palette[-3]], [0.125, palette[-2]], [0.25, palette[-1]], 
+        [0.5, palette[0]], [0.75, palette[1]], [0.875, palette[2]], [1.0, palette[3]]
+    ]
+
+    # Exclude GOOGL from the dataframe
+    dataframe = dataframe[dataframe['symbol'] != 'GOOGL']
+
+    # Apply a power transformation to the market cap values
+    power = 0.6  # Adjust this value to control the transformation strength
+    dataframe['transformed_market_cap'] = np.power(dataframe['market_cap'], power)
+
+    # Create a new column that combines the name with the percentage change and create symbol_with_change column with HTML formatting
+    dataframe['symbol_with_change'] = dataframe.apply(
+        lambda row: f"<span style='font-size: larger; color: white;'>{row['symbol']}</span><br><span style='color: white;'>{row['one_day_rolling_percent_change']:+.2f}%</span>",
+        axis=1
+    )
+
+    # Create Plotly treemap
+    fig = px.treemap(
+        dataframe,
+        path=['category', 'symbol_with_change'], # ['category', 'industry', 'symbol_with_change'], ruins the scaling, for now leave the 'industry' out
+        values='transformed_market_cap',
+        color='one_day_rolling_percent_change',
+        color_continuous_scale=color_scale, 
+        range_color=(-3,3),
+        custom_data=['one_day_rolling_percent_change', "current_price", "name"]  
+    )
+
+    # Adjust annotation position and style
+    fig.update_traces(
+        textposition='middle center',
+        hovertemplate='<b>%{label}</b><br>' +
+                    '%{customdata[2]}<br>'+
+                    #'Rolling % change: %{customdata[0]:.2f}%<br>' +
+                    'Last price: $%{customdata[1]:,.2f}<br>' + 
+                    '<extra></extra>'
+    )
+
+    # Modify the colorbar
+    fig.update_layout(
+        coloraxis_colorbar=dict(
+            title="Rolling % Change",
+            thicknessmode="pixels", thickness=20,
+            lenmode="fraction", len=0.33,
+            yanchor="bottom", y=-0.1,
+            xanchor="center", x=0.5,
+            orientation="h",
+            )
+            #https://community.plotly.com/t/how-to-change-the-background-color-of-the-html-page/67356 TODO
+    )
+
+
+
+    return fig
+
 
 
 
 def main():
-     df = create_watchlist_df()
+     start(u, p)
+
+     df = create_watchlist_df() #can pass in a link URL here optionally
      #print(df)
+
+     #print(set(df["industry"]))
+     print(df[df['symbol'] == 'PYPL']) #TODO fix the categories using this, for example Visa and PYPL are under industrial and manufacturing?? maybe api is returning wrong..
 
      fig = create_heat_map(df)
      fig.show()
@@ -177,4 +249,16 @@ def main():
 if __name__ == "__main__":
     main()
 
+
+
 #TODO for later, -----> print(r.get_quotes("TSLA")) get bid ask etc if needed
+
+# BTW, if this gets ran, this will happen:
+# Error:
+# SettingWithCopyWarning: A value is trying to be set on a copy of a
+# slice from a DataFrame
+
+# As explained in the Source, this warning is usually safe to ignore. You
+# can disable it by running the following:
+  # import pandas as pd
+  # pd.options.mode.chained_assignment = None  # default='warn'
