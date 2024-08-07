@@ -196,6 +196,7 @@ def create_heat_map(dataframe):
                     '<extra></extra>'
     )
 
+
     # Modify the colorbar
     fig.update_layout(
         coloraxis_colorbar=dict(
@@ -205,8 +206,10 @@ def create_heat_map(dataframe):
             yanchor="bottom", y=-0.1,
             xanchor="center", x=0.5,
             orientation="h",
-            )
-            #https://community.plotly.com/t/how-to-change-the-background-color-of-the-html-page/67356 TODO
+            )#,
+        #paper_bgcolor="grey",
+        #plot_bgcolor="grey"
+        # ^^^ https://community.plotly.com/t/how-to-change-the-background-color-of-the-html-page/67356 TODO
     )
 
     return fig
@@ -215,14 +218,14 @@ def create_heat_map(dataframe):
 
 # Define the layout of the app
 app.layout = html.Div([
-    html.H1("Stock Market Heat Map"),
-    dcc.Graph(id='heatmap-graph'),
+    html.H1("Overnight Stock Market Heat Map", style={'textAlign': 'center'}),
+    dcc.Graph(id='heatmap-graph', style={'width': '100%', 'height': '90vh'}),
     dcc.Interval(
         id='interval-component',
         interval=300*1000,  # in milliseconds, update every 5 minutes
         n_intervals=0
     )
-])
+], style={'padding': '0 20px', 'max-width': '100vw', 'overflow': 'hidden'})
 
 
 
