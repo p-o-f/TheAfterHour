@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 import numpy as np
 import dash
+import pyotp
 from dash import dcc, html
 from dash.dependencies import Input, Output
 from dotenv import load_dotenv
@@ -13,7 +14,7 @@ import os
 load_dotenv()
 
 
-
+totp  = pyotp.TOTP("My2factorAppHere").now()
 u = os.environ.get('rh_username')
 p = os.environ.get('rh_password')
 
@@ -25,7 +26,7 @@ server = app.server  # This is for Gunicorn to use
 
 def start(email, pw):
     try:
-        login = r.login(email, pw, mfa_code="192053 506357")
+        login = r.login(email, pw, mfa_code=totp)
         print("Logged in!")
     except:
         print("Error while trying to login.")
