@@ -29,6 +29,7 @@ def start(email, pw):
         print("Logged in!")
     except:
         print("Error while trying to login.")
+        print(u, p) #TODO temp delete
 
 
 
