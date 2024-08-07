@@ -9,8 +9,12 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 
+
+
 u = os.environ.get('rh_username')
 p = os.environ.get('rh_password')
+
+
 
 def start(email, pw):
     try:
@@ -138,35 +142,6 @@ def create_watchlist_df(url_suffix = "e8ef4c1f-244f-4db5-a582-c4c37f3c8e8e", inf
 
 
 
-##### Simple prototype that works fine for basic functionality; TODO iterate on it in terms of UI/UX mainly and use it as a base/reference
-'''
-def create_heat_map(dataframe):
-    header = "Overnight Trading Stock Market Heat Map"
-    
-    palette = {-3: "#e74b3e", -2: "#b44b48", -1: "#84494e", 0: "#414553", 1: "#457351", 2: "#509957", 3: "#63c667"}
-    black = "#262930"
-
-    # Exclude GOOGL from the dataframe
-    dataframe = dataframe[dataframe['symbol'] != 'GOOGL']
-
-    # Create a new column that combines the name with the percentage change and create symbol_with_change column with HTML formatting
-    dataframe.loc[:, 'symbol_with_change'] = dataframe.apply(
-        lambda row: f"<span style='font-size: larger'>{row['symbol']}</span><br>{row['one_day_rolling_percent_change']:+.2f}%", axis=1
-    )
-
-    # Create Plotly treemap
-    fig = px.treemap(
-        dataframe,
-        path=[px.Constant(header), 'category', 'industry', 'symbol_with_change'],
-        values='market_cap',
-        color='one_day_rolling_percent_change'
-    )
-
-    return fig
-'''
-
-
-
 def create_heat_map(dataframe):    
     palette = {
         -3: "#e74b3e", -2: "#b44b48", -1: "#84494e",
@@ -227,10 +202,7 @@ def create_heat_map(dataframe):
             #https://community.plotly.com/t/how-to-change-the-background-color-of-the-html-page/67356 TODO
     )
 
-
-
     return fig
-
 
 
 
@@ -245,6 +217,8 @@ def main():
 
      fig = create_heat_map(df)
      fig.show()
+
+
 
 if __name__ == "__main__":
     main()
