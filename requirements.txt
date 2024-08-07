@@ -19,3 +19,5 @@ requests
 robin-stocks
 scipy
 uvicorn
+gunicorn
+

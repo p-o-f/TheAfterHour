@@ -5,6 +5,9 @@ from robin_stocks.robinhood.urls import *
 import plotly.graph_objects as go
 import plotly.express as px
 import numpy as np
+import dash
+from dash import dcc, html
+from dash.dependencies import Input, Output
 from dotenv import load_dotenv
 import os
 load_dotenv()
@@ -13,6 +16,10 @@ load_dotenv()
 
 u = os.environ.get('rh_username')
 p = os.environ.get('rh_password')
+
+# Initialize the Dash app
+app = dash.Dash(__name__)
+server = app.server  # This is for Gunicorn to use
 
 
 
@@ -206,22 +213,32 @@ def create_heat_map(dataframe):
 
 
 
-def main():
-     start(u, p)
-
-     df = create_watchlist_df() #can pass in a link URL here optionally
-     #print(df)
-
-     #print(set(df["industry"]))
-     print(df[df['symbol'] == 'PYPL']) #TODO fix the categories using this, for example Visa and PYPL are under industrial and manufacturing?? maybe api is returning wrong..
-
-     fig = create_heat_map(df)
-     fig.show()
-
+# Define the layout of the app
+app.layout = html.Div([
+    html.H1("Stock Market Heat Map"),
+    dcc.Graph(id='heatmap-graph'),
+    dcc.Interval(
+        id='interval-component',
+        interval=300*1000,  # in milliseconds, update every 5 minutes
+        n_intervals=0
+    )
+])
 
 
-if __name__ == "__main__":
-    main()
+
+# Define callback to update the graph
+@app.callback(Output('heatmap-graph', 'figure'),
+              Input('interval-component', 'n_intervals'))
+def update_graph(n):
+    start(u, p)
+    df = create_watchlist_df()
+    fig = create_heat_map(df)
+    return fig
+
+# Run the app
+if __name__ == '__main__':
+    app.run_server(debug=True)
+
 
 
 
