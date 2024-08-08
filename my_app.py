@@ -33,7 +33,6 @@ def start(email, pw):
         login = r.login(email, pw, mfa_code=totp)
         print("Logged in!")
     except:
-        print(email, pw, totp)
         print("Error while trying to login.")
 
 
