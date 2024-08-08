@@ -14,9 +14,13 @@ import os
 load_dotenv()
 
 
-totp  = pyotp.TOTP("My2factorAppHere").now()
+
+
 u = os.environ.get('rh_username')
 p = os.environ.get('rh_password')
+auth = os.environ.get('two_factor') #MFA code env variable
+
+totp  = pyotp.TOTP(auth).now()
 
 # Initialize the Dash app
 app = dash.Dash(__name__)
