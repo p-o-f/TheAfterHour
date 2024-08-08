@@ -31,9 +31,9 @@ server = app.server  # This is for Gunicorn to use
 def start(email, pw):
     try:
         login = r.login(email, pw, mfa_code=totp)
-        print(email, pw, totp)
         print("Logged in!")
     except:
+        print(email, pw, totp)
         print("Error while trying to login.")
 
 
